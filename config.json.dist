@@ -1,0 +1,5 @@
+{
+  "dbUrl":"http://your_host_here_without_trailing_slash",
+  "dbName":"YourDatabaseName",
+  "port":3000
+}

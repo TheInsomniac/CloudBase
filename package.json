@@ -1,0 +1,31 @@
+{
+  "name": "CloudBase",
+  "version": "0.0.1",
+  "description": "MongoDB BaaS using Websockets and REST",
+  "main": "app.js",
+  "dependencies": {
+    "express": "~3.4.8",
+    "socket.io": "~0.9.16",
+    "monk": "^0.8.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TheInsomniac/CloudBase"
+  },
+  "keywords": [
+    "mongodb",
+    "express",
+    "cloud",
+    "socket.io"
+  ],
+  "author": "The Insomniac",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/TheInsomniac/CloudBase/issues"
+  },
+  "homepage": "https://github.com/TheInsomniac/CloudBase"
+}
