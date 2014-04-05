@@ -4,23 +4,30 @@
 <head>
   <meta charset="UTF-8">
   <title>Cloudbase</title>
-  <style>
-    body {background-color: #333; color: #faebd7;}
-    #message {color:red;}
-    #last {color:yellow;}
-  </style>
+  <link rel="stylesheet" href="/css/jstree.css" type="text/css" media="screen" title="no title" charset="utf-8">
+  <link rel="stylesheet" href="/css/stylesheet.css" type="text/css" media="screen" title="no title" charset="utf-8">
 </head>
 
 <body>
-  <div id="message"></div>
-  <br>
-  <pre id="collection"></pre>
-  <br>
-  <pre id="last"></pre>
+
+  <div class="box box-breadcrumbs">
+    <div class="box-header">
+      <div class="box-header-content">
+        <div id="breadcrumbs" class="breadcrumbs">
+          <a href="#">Example</a>
+        </div>
+      </div>
+    </div>
+    <div class="box-content clearfix" style="position: relative;">
+      <div id="tree"></div>
+    </div>
+  </div>
   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+  <script src="js/jstree.js"></script>
   <!-- <script src="socket.io/socket.io.js"></script> -->
   <script src="js/socket.io.min.js"></script>
   <script src="js/socket.js"></script>
+  <script src="js/treeView.js"></script>
 </body>
 
 </html>

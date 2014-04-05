@@ -6,7 +6,7 @@ var socketURL = 'http://localhost:3000';
 // Initialize socket.io
 var socket = io.connect(socketURL);
 
-//on connetion, updates connection state and sends subscribe request
+//on connection, updates connection state and sends subscribe request
 socket.on('connect', function() {
   'use strict';
   socket.emit('subscribe', {
@@ -26,7 +26,6 @@ socket.on('reconnecting', function() {
 // Get messages and log to console
 socket.on('message', function(data) {
   'use strict';
-  $('#message').html(data.text);
   console.log(data.text);
 });
 
@@ -34,21 +33,19 @@ socket.on('message', function(data) {
 /* socket.emit('collection', {channel:channel}); */
 socket.on('collection', function(data) {
   'use strict';
-  $('#collection').html(JSON.stringify(data, null, 2));
+  if (typeof treeView === 'function') treeView(data);
   console.log(JSON.stringify(data));
 });
 
 /* socket.emit('item', {channel:channel, item:"test"}); */
 socket.on('item', function(data) {
   'use strict';
-  $('#last').html(JSON.stringify(data, null, 2));
   console.log(JSON.stringify(data));
 });
 
 /* socket.emit('add', {channel:channel, item:{_id:"test", data0:"0", data1:"1"}}); */
 socket.on('added', function(data) {
   'use strict';
-  $('#last').html(JSON.stringify(data, null, 2));
   console.log(JSON.stringify(data));
   if (data.exists) {
     alert('Item already exists. Did you mean to update or delete?');
@@ -59,7 +56,6 @@ socket.on('added', function(data) {
 /* socket.emit('update', {channel:channel, item:{"test": {data0:"0",data1:"1", data2:"2"}}}); */
 socket.on('updated', function(data) {
   'use strict';
-  $('#last').html(JSON.stringify(data, null, 2));
   console.log(JSON.stringify(data));
   if (data.missing) {
     alert('Item does not exist. Did you mean to add?');
@@ -70,7 +66,6 @@ socket.on('updated', function(data) {
 /* socket.emit('remove', {channel:channel, item:"test"}); */
 socket.on('removed', function(data) {
   'use strict';
-  $('#last').html(JSON.stringify(data, null, 2));
   console.log(JSON.stringify(data));
   socket.emit('collection', {
     channel: channel
