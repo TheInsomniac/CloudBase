@@ -23,7 +23,8 @@ io.set('log level', 1);
 app.use(express.json());
 app.use(express.urlencoded());
 app.use(function(err, req, res, next){
-  res.json(500, {Error: "Improperly Formatted Request/JSON"});
+  'use strict';
+  res.json(500, {Error: 'Improperly Formatted Request/JSON'});
 });
 
 // app.use(express.favicon(__dirname + '/favicon.ico', {
@@ -35,15 +36,75 @@ app.use(express.static(__dirname + '/clientExample', {
   maxAge: 6000000
 }));
 
-/* Get item in form of collectionName/test */
+/* Get item in form of collectionName/item/[key] */
 /* curl -X GET -H "Content-Type: application/json"  http://localhost:3000/example/test */
-app.get('/:db/:item', function (req, res) {
+
+// TODO: use pattern matching to allow further refinement of returned data...
+// app.get(/^\/((?:[^\/]+\/?)+)\/?/, function (req, res, next) {
+//   'use strict';
+//   var parm = req.params[0].split('/');
+//   if (parm.length === 1) next();
+//   else {
+//     if (parm[parm.length - 1] === '') parm.pop();
+//     var db = parm[0];
+//     var item = parm[1];
+//     var key = parm[2];
+//     itemGet(db, item, function() {
+//       if (this.length && !key) res.json(this[0]);
+//       else if (this.length && key) {
+//         //this[0][key] instanceof Array
+//         res.json(this[0][key]);
+//       }
+//       else res.json({Error:'Item does not exist'});
+//     });
+//   }
+// });
+
+app.get('/:db/:item/:key?', function (req, res) {
   'use strict';
   var db = req.params.db;
   var item = req.params.item;
+  if (req.params.key) var key = req.params.key;
   itemGet(db, item, function() {
-    if (this.length) res.json(this[0]);
+    if (this.length && !key) res.json(this[0]);
+    else if (this.length && key) {
+      res.json(this[0][key]);
+    }
     else res.json({Error:'Item does not exist'});
+  });
+});
+
+/* Display all items in given collection */
+/* curl -X GET -H "Content-Type: application/json"  http://localhost:3000/example */
+app.get('/:db', function (req, res, next) {
+  'use strict';
+  if (Object.keys(req.body).length) {
+    next();
+  } else {
+    var db = req.params.db;
+    collectionGet(db, function() {
+      if (!Object.keys(this[Object.keys(this)[0]]).length) {
+        res.json({Error:'Database empty or does not exist'});
+      } else {
+        res.json(this);
+      }
+    });
+  }
+});
+
+/* Find item using query (such as regex example below) in collection */
+/* curl -X GET -H "Content-Type: application/json"  -d '{ "_id": { "$regex": "tes", "$options": "i" }}' \
+http://localhost:3000/example */
+app.get('/:db', function (req, res) {
+  'use strict';
+  var db = req.params.db;
+  var query = req.body;
+  collectionFind(db, query, function() {
+    if (!Object.keys(this[Object.keys(this)[0]]).length) {
+      res.json({Error:'No matches found'});
+    } else {
+      res.json(this);
+    }
   });
 });
 
@@ -103,35 +164,6 @@ app.delete('/:db/:item?', function (req, res) {
     });
   } else {
     res.json({Error: 'No item specified for deletion'});
-  }
-});
-
-/* Display all items in given collection */
-/* curl -X GET -H "Content-Type: application/json"  http://localhost:3000/example */
-/* OR */
-/* Find item using query (such as regex example below) in collection */
-/* curl -X GET -H "Content-Type: application/json"  -d '{ "_id": { "$regex": "tes", "$options": "i" }}' \
-http://localhost:3000/example */
-app.get('/:db', function (req, res) {
-  'use strict';
-  var db = req.params.db;
-  if (Object.keys(req.body).length) {
-    var query = req.body;
-    collectionFind(db, query, function() {
-      if (!Object.keys(this[Object.keys(this)[0]]).length) {
-        res.json({Error:'No matches found'});
-      } else {
-        res.json(this);
-      }
-    });
-  } else {
-    collectionGet(db, function() {
-      if (!Object.keys(this[Object.keys(this)[0]]).length) {
-        res.json({Error:'Database empty or does not exist'});
-      } else {
-        res.json(this);
-      }
-    });
   }
 });
 
