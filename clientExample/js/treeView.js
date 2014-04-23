@@ -1,44 +1,47 @@
-function treeView(collection) {
-  'use strict';
-  var $tree = $('#tree');
-
-  /* Remove old jsTree data */
-  $tree.empty().removeClass().removeAttr('role');
-  /* and.. recreate */
-  $tree.append(json2html(collection));
-
-  /* Uncomment to Expand All branches by default */
-  /* By default we're storing the existing state of open/closed branches */
-
-  //$tree.on('loaded.jstree', function(event, data) {
-  //  data.instance.open_all();
-  //});
-
-  $tree.jstree({
-    'core': {
-      'themes': {
-        'icons': false,
-        'responsive': false
-      },
-      'animation': 100
-    },
-    'plugins': ['state']
-  });
-  $tree.delegate('a', 'click', function() {
-    if ($tree.jstree('is_leaf', this)) {
-      document.location.href = this;
-    } else {
-      $tree.jstree('toggle_node', this);
+(function toggleTree() {
+  document.getElementById('tree').addEventListener('click',function(el) {
+    'use strict';
+    var items;
+    if (el.target && el.target.nodeName === 'SPAN') {
+      if (el.target.parentNode.className === 'node') {
+        items = el.target.parentNode.querySelectorAll('.node > ul');
+      } else if (el.target.parentNode.className === 'root') {
+        items = el.target.parentNode.querySelectorAll('.root > ul');
+      }
+      Array.prototype.forEach.call(items, function(item) {
+        if (item.className === 'collapsed' || item.className === '') {
+          item.className = 'expanded';
+          el.target.className = 'expanded';
+        } else {
+          item.className = 'collapsed';
+          el.target.className = 'collapsed';
+        }
+      });
     }
   });
+})();
+
+function treeView(collection) {
+  'use strict';
+  var el = document.getElementById('tree');
+  /* Remove existing data */
+  while (el.lastChild) {
+    el.removeChild(el.lastChild);
+  }
+  /* Insert new data */
+  el.appendChild(json2html(collection));
 }
 
-/* If not using jsTree above */
+/* Run once function to check root element of JSON object */
+function root() {
+  /* replace function for subsequent runs */
+  root = function(){
+    return 'root';
+  };
+  return 'treeRoot';
+}
 
-//var el = document.getElementById('tree');
-//el.appendChild(json2html(collection));
-
-/* Function to turn json data into unordered list */
+/* Function to turn JSON data into unordered list */
 function json2html(json) {
   'use strict';
   var i, ret = document.createElement('ul'),
@@ -46,9 +49,11 @@ function json2html(json) {
   for (i in json) {
     li = ret.appendChild(document.createElement('li'));
     if (typeof json[i] === 'object' && Object.keys(json[i]).indexOf('_id') === -1) {
-      li.className = 'root';
+      li.className = root();
     } else if (typeof json[i] === 'object' && Object.keys(json[i]).indexOf('_id') >= 0) {
       li.className = 'node';
+      li.setAttribute('data-node', i);
+      /* Obtain with document.querySelectorAll('[data-node="_id"]'); */
     } else {
       li.className = 'item';
     }
@@ -58,6 +63,7 @@ function json2html(json) {
       span.appendChild(document.createTextNode(i));
     } else {
       span = li.appendChild(document.createElement('span'));
+      if (li.className !== 'treeRoot') span.className = 'collapsed';
       span.appendChild(document.createTextNode(i));
     }
     if (typeof json[i] === 'object') {

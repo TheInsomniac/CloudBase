@@ -2,6 +2,10 @@
 var channel = 'example';
 // URL of Socket.IO Server
 var socketURL = 'http://localhost:3000';
+// console.log if debug is true
+var DEBUG = true;
+// and create a global object to inspect collection
+if (DEBUG) var collection = '';
 
 // Initialize socket.io
 var socket = io.connect(socketURL);
@@ -26,7 +30,7 @@ socket.on('reconnecting', function() {
 // Get messages and log to console
 socket.on('message', function(data) {
   'use strict';
-  console.log(data.text);
+  DEBUG && console.log(data.text);
 });
 
 // Get entire collection
@@ -34,19 +38,22 @@ socket.on('message', function(data) {
 socket.on('collection', function(data) {
   'use strict';
   if (typeof treeView === 'function') treeView(data);
-  console.log(JSON.stringify(data));
+  DEBUG && console.log(JSON.stringify(data));
+  if (DEBUG) {
+    collection = JSON.stringify(data);
+  }
 });
 
 /* socket.emit('item', {channel:channel, item:"test"}); */
 socket.on('item', function(data) {
   'use strict';
-  console.log(JSON.stringify(data));
+  DEBUG && console.log(JSON.stringify(data));
 });
 
 /* socket.emit('add', {channel:channel, item:{_id:"test", data0:"0", data1:"1"}}); */
 socket.on('added', function(data) {
   'use strict';
-  console.log(JSON.stringify(data));
+  DEBUG && console.log(JSON.stringify(data));
   if (data.exists) {
     alert('Item already exists. Did you mean to update or delete?');
   }
@@ -56,7 +63,7 @@ socket.on('added', function(data) {
 /* socket.emit('update', {channel:channel, item:{"test": {data0:"0",data1:"1", data2:"2"}}}); */
 socket.on('updated', function(data) {
   'use strict';
-  console.log(JSON.stringify(data));
+  DEBUG && console.log(JSON.stringify(data));
   if (data.missing) {
     alert('Item does not exist. Did you mean to add?');
   }
@@ -66,7 +73,16 @@ socket.on('updated', function(data) {
 /* socket.emit('remove', {channel:channel, item:"test"}); */
 socket.on('removed', function(data) {
   'use strict';
-  console.log(JSON.stringify(data));
+  DEBUG && console.log(JSON.stringify(data));
+  socket.emit('collection', {
+    channel: channel
+  });
+});
+
+/* socket.emit('clear', {channel:channel}); */
+socket.on('clear', function() {
+  'use strict';
+  DEBUG && console.log('Database Cleared!');
   socket.emit('collection', {
     channel: channel
   });
@@ -112,6 +128,13 @@ var emit = {
     socket.emit('remove', {
       channel:channel,
       item:item
+    });
+  },
+  clear: function() {
+    'use strict';
+    // Usage: emit.clear();
+    socket.emit('clear', {
+      channel:channel
     });
   }
 };

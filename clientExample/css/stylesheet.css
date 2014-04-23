@@ -34,32 +34,11 @@ body {
   margin: 0;
   padding: 0;
   background: #f2f3f7;
-  color: #7b8386;
+  color: #999;
 }
 
 #breadcrumbs {
   font-weight: 700;
-}
-
-#tree {
-  width: 600px;
-  min-height: 400px;
-  float: left;
-  clear: none;
-  padding-top: 10px;
-  -moz-border-radius: 5px;
-  -webkit-border-radius: 5px;
-  border-radius: 5px;
-  background-color: #FFF;
-}
-
-#tree ul {
-  list-style: none;
-}
-
-#tree a,
-#tree a:hover, #tree a:visited {
-  color: inherit;
 }
 
 a {
@@ -138,21 +117,134 @@ a:hover {
   text-decoration: none;
 }
 
+.treeRoot > span {
+  color: #7b8386;
+}
 
-.item .key:after {
+.root > span {
+  color: #7b8386;
+  cursor: pointer;
+}
+
+.node > span {
+  color: #7b8386;
+  cursor: pointer;
+}
+
+.key:after {
   content: ": ";
+}
+
+.key {
+  color: #445D68;
+}
+
+.value {
+  color: #5C8B9B;
 }
 
 .key:hover + .value {
   color: orange;
-  font-style: italic;
+  border: 1px solid #cdcdcd;
+  transition: all 0.3s linear;
 }
 
-.jstree-default .jstree-clicked {
-  background-color: inherit;
+#tree, #tree ul{
+/*  font: normal normal 14px/20px Helvetica, Arial, sans-serif;*/
+  list-style-type: none;
+  margin: 0 0 0 10px;
+  padding: 0;
+  position: relative;
+  overflow:hidden;
 }
 
-.jstree-default .jstree-hovered {
-  background-color: inherit;
-  border: 1px solid;
+#tree ul > li{
+  margin: 0;
+  padding: 2px 12px;
+  position: relative;
+}
+
+#tree ul > li::before, #tree ul > li::after{
+  content: '';
+  position: absolute;
+  left: 0;
+}
+
+/* horizontal line on inner list items */
+#tree ul > li::before{
+  border-top: 1px solid #cdcdcd;
+  top: 10px;
+  width: 10px;
+  height: 0;
+}
+
+/* Don't make tree for first node (database name) */
+#tree ul:first-child > li::before {
+  border-top: none;
+}
+
+/* But do add a bit of style to it! */
+#tree ul:first-child > li > span {
+  position: relative;
+  right: 1%;
+  text-transform: uppercase;
+}
+
+/* vertical line on list items */
+#tree ul > li::after{
+  border-left: 1px solid #cdcdcd;
+  height: 100%;
+  width: 0px;
+  top: -10px;
+}
+
+/* lower line on list items from the first level because they don't have parents */
+#tree > ul > li::after{
+  top: 10px;
+}
+
+/* hide line from the last of the first level list items */
+#tree > ul > li:last-child::after{
+  display: none;
+}
+
+
+#tree ul:last-child li:last-child::after{
+  height:20px;
+}
+
+/* Hide tree items by default */
+.node > ul, .node .root > ul {
+  opacity:0;
+  height: 0;
+  -webkit-transition: height 0s 290ms, opacity 300ms ease-in-out;
+    -moz-transition: height 0s 290ms, opacity 300ms ease-in-out;
+      -ms-transition: height 0s 290ms, opacity 300ms ease-in-out;
+        -o-transition: height 0s 290ms, opacity 300ms ease-in-out;
+          transition: height 0s 290ms, opacity 300ms ease-in-out;
+}
+
+.node > ul.expanded, .node .root > ul.expanded {
+  opacity:1;
+  height: 100%;
+  -webkit-transition: height 0s, opacity 300ms ease-in-out;
+    -moz-transition: height 0s, opacity 300ms ease-in-out;
+      -ms-transition: height 0s, opacity 300ms ease-in-out;
+        -o-transition: height 0s, opacity 300ms ease-in-out;
+          transition: height 0s, opacity 300ms ease-in-out;
+}
+
+/* if collapsed/hidden display "+" */
+span.collapsed:before {
+  content : "+";
+  position: relative;
+  top: -2px;
+  color: orange;
+}
+
+span.expanded:before {
+  content : "- ";
+  position: relative;
+  top: -1px;
+  color: orange;
 }
