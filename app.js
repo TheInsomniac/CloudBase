@@ -255,7 +255,7 @@ function collectionClear(db, cb) {
   var collection = Datastore.get(db);
   collection.remove(function(err) {
     if (err) console.error(err);
-    io.sockets. in (db).emit('clear');
+    io.sockets.in(db).emit('clear');
     if (cb) cb.call();
   });
 }
@@ -268,7 +268,7 @@ function itemAdd(db, data, cb) {
     if (err && err.code === 11000) {
       if (cb) cb.call(false);
     } else {
-      io.sockets. in (db).emit('added', {
+      io.sockets.in(db).emit('added', {
         added: data
       });
       if (cb) cb.call(doc);
@@ -298,7 +298,7 @@ function itemUpdate(db, item, data, cb) {
   }, update, function(err, doc) {
     if (err) console.error(err);
     if (doc) {
-      io.sockets. in (db).emit('updated', {
+      io.sockets.in(db).emit('updated', {
         updated: item
       });
       if (cb) cb.call(doc);
@@ -319,7 +319,7 @@ function itemRemove(db, item, cb) {
     if (doc === 0) {
       if (cb) cb.call(false);
     } else {
-      io.sockets. in (db).emit('removed', {
+      io.sockets.in(db).emit('removed', {
         removed: item
       });
       if (cb) cb.call(true);
@@ -346,7 +346,7 @@ io.sockets.on('connection', function(socket) {
   socket.on('collection', function(data) {
     var channel = data.channel;
     collectionGet(channel, function() {
-      io.sockets. in (channel).emit('collection', this);
+      io.sockets.in(channel).emit('collection', this);
     });
   });
 
@@ -354,7 +354,7 @@ io.sockets.on('connection', function(socket) {
     var channel = data.channel;
     var item = data.item;
     itemGet(channel, item, function() {
-      io.sockets. in (channel).emit('item', this[0]);
+      io.sockets.in(channel).emit('item', this[0]);
     });
   });
 
@@ -374,7 +374,7 @@ io.sockets.on('connection', function(socket) {
     var item = data.item;
     //var key = Object.keys(data.item)[0];
     itemAdd(channel, item, function() {
-      if (!this) io.sockets. in (channel).emit('added', {
+      if (!this) io.sockets.in(channel).emit('added', {
           exists: 'Exists'
         });
     });
@@ -385,7 +385,7 @@ io.sockets.on('connection', function(socket) {
     var item = data.item[Object.keys(data.item)[0]];
     var key = Object.keys(data.item)[0];
     itemUpdate(channel, key, item, function() {
-      if (!this) io.sockets. in (channel).emit('updated', {
+      if (!this) io.sockets.in(channel).emit('updated', {
           missing: 'Missing'
         });
     });

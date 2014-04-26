@@ -1,6 +1,6 @@
 (function toggleTree() {
+  'use strict';
   document.getElementById('tree').addEventListener('click',function(el) {
-    'use strict';
     var items;
     if (el.target && el.target.nodeName === 'SPAN') {
       if (el.target.parentNode.className === 'node') {

@@ -130,11 +130,13 @@ var emit = {
       item:item
     });
   },
-  clear: function() {
+  clear: function(playItSafe) {
     'use strict';
-    // Usage: emit.clear();
-    socket.emit('clear', {
-      channel:channel
-    });
+    // Usage: emit.clear(true);
+    if (playItSafe === true) {
+      socket.emit('clear', {
+        channel:channel
+      });
+    }
   }
 };
