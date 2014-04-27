@@ -1,13 +1,13 @@
 {
   "name": "CloudBase",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "MongoDB BaaS using Websockets and REST API",
   "main": "app.js",
   "dependencies": {
-    "express": "~4.0.0",
-    "body-parser": "~1.0.2",
-    "socket.io": "~0.9.16",
-    "monk": "^0.8.1"
+    "express": "~4.1.x",
+    "body-parser": "~1.0.x",
+    "socket.io": "~0.9.x",
+    "monk": "~0.8.x"
   },
   "devDependencies": {},
   "scripts": {

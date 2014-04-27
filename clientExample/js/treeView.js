@@ -32,24 +32,20 @@ function treeView(collection) {
   el.appendChild(json2html(collection));
 }
 
-/* Run once function to check root element of JSON object */
-function root() {
-  /* replace function for subsequent runs */
-  root = function(){
-    return 'root';
-  };
-  return 'treeRoot';
-}
-
 /* Function to turn JSON data into unordered list */
-function json2html(json) {
+function json2html(json, isChild) {
   'use strict';
+  isChild = isChild || false;
   var i, ret = document.createElement('ul'),
     li, span;
   for (i in json) {
     li = ret.appendChild(document.createElement('li'));
     if (typeof json[i] === 'object' && Object.keys(json[i]).indexOf('_id') === -1) {
-      li.className = root();
+      if (isChild) {
+        li.className = 'root';
+      } else {
+        li.className = 'treeRoot';
+      }
     } else if (typeof json[i] === 'object' && Object.keys(json[i]).indexOf('_id') >= 0) {
       li.className = 'node';
       li.setAttribute('data-node', i);
@@ -67,7 +63,8 @@ function json2html(json) {
       span.appendChild(document.createTextNode(i));
     }
     if (typeof json[i] === 'object') {
-      li.appendChild(json2html(json[i]));
+      /* Call with true as these will be child root, not treeRoot */
+      li.appendChild(json2html(json[i], true));
     } else {
       span = li.appendChild(document.createElement('span'));
       span.className = 'value';
