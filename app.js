@@ -1,5 +1,3 @@
-// TODO: MUCH better (rather..ADD SOME) error handling for improperly formated JSON queries..
-
 /* Load values from config file for below variables */
 var config = require('./config.json');
 /* URL to MongoDB store */
@@ -27,9 +25,7 @@ app.use(bodyParser());
 
 app.use(function(err, req, res, next) {
   'use strict';
-  res.json(500, {
-    Error: 'Improperly Formatted Request/JSON'
-  });
+  res.json(500, {Error: 'Improperly Formatted Request/JSON'});
 });
 
 // app.use(express.favicon(__dirname + '/favicon.ico', {
@@ -37,62 +33,58 @@ app.use(function(err, req, res, next) {
 // }));
 
 /* For example.html usage. Comment out in production and remove "clientExample" dir */
-app.use(express.static(__dirname + '/clientExample', {
-  maxAge: 6000000
-}));
+app.use(express.static(__dirname + '/clientExample', {maxAge: 6000000}));
 
 /* Get item in form of collectionName/item/[key] */
 /* curl -X GET -H "Content-Type: application/json"  http://localhost:3000/example/test */
 
-// TODO: use pattern matching to allow further refinement of returned data...
-// app.get(/^\/((?:[^\/]+\/?)+)\/?/, function (req, res, next) {
-//   'use strict';
-//   var parm = req.params[0].split('/');
-//   if (parm.length === 1) next();
-//   else {
-//     if (parm[parm.length - 1] === '') parm.pop();
-//     var db = parm[0];
-//     var item = parm[1];
-//     var key = parm[2];
-//     itemGet(db, item, function() {
-//       if (this.length && !key) res.json(this[0]);
-//       else if (this.length && key) {
-//         //this[0][key] instanceof Array
-//         res.json(this[0][key]);
-//       }
-//       else res.json({Error:'Item does not exist'});
-//     });
-//   }
-// });
-
-app.get('/:db/:item/:key?', function(req, res) {
+/* Supports nested gets in the form of collectionName/item/key/key/key ... */
+/* curl -X GET -H "Content-Type: application/json"  http://localhost:3000/example/test/data0/data1 */
+app.get(/^\/((?:[^\/]+\/?)+)\/?/, function (req, res, next) {
   'use strict';
-  var db = req.params.db;
-  var item = req.params.item;
-  if (req.params.key) var key = req.params.key;
-  itemGet(db, item, function() {
-    if (this.length && !key) res.json(this[0]);
-    else if (this.length && key) {
-      res.json(this[0][key]);
-    } else res.json({
-      Error: 'Item does not exist'
+  var parm = req.params[0];
+  if (parm.lastIndexOf('/') === (parm.length -1)) {
+    parm = parm.slice(0, -1);
+  }
+  parm = parm.split('/');
+  if (parm.length === 1) next();
+  else {
+    var db = parm[0];
+    var item = parm[1];
+    var key = parm[2];
+    if (parm.length > 3) {
+      var keys = [];
+      for (var i = 3; i < parm.length; i++) {
+        keys.push(parm[i]);
+      }
+    }
+    itemGet(db, item, function() {
+      if (this.length && !key) res.json(this[0]);
+      else if (this.length && key && !keys) res.json(this[0][key]);
+      else if (this.length && key && keys) {
+        var ret = this[0][key];
+        for (var i = 0; i < keys.length; i++) {
+          ret = ret[keys[i]];
+        }
+        res.json(ret);
+      }
+      else res.json({Error: 'Item does not exist'});
     });
-  });
+  }
 });
 
 /* Display all items in given collection */
 /* curl -X GET -H "Content-Type: application/json"  http://localhost:3000/example */
 app.get('/:db', function(req, res, next) {
   'use strict';
+  console.log('called');
   if (Object.keys(req.body).length) {
     next();
   } else {
     var db = req.params.db;
     collectionGet(db, function() {
       if (!Object.keys(this[Object.keys(this)[0]]).length) {
-        res.json({
-          Error: 'Database empty or does not exist'
-        });
+        res.json({Error: 'Database empty or does not exist'});
       } else {
         res.json(this);
       }
@@ -109,9 +101,7 @@ app.get('/:db', function(req, res) {
   var query = req.body;
   collectionFind(db, query, function() {
     if (!Object.keys(this[Object.keys(this)[0]]).length) {
-      res.json({
-        Error: 'No matches found'
-      });
+      res.json({Error: 'No matches found'});
     } else {
       res.json(this);
     }
@@ -125,11 +115,10 @@ app.post('/:db', function(req, res) {
   'use strict';
   var db = req.params.db;
   var data = req.body;
+  if(!req.body._id) res.json({Error: 'No _id specified. This is a required field'});
   itemAdd(db, data, function() {
     if (this) res.json(201, this);
-    else if (!this) res.json({
-        Error: 'Item already exists. Use PUT method to update item'
-      });
+    else if (!this) res.json({Error: 'Item already exists. Use PUT method to update item'});
   });
 });
 
@@ -143,9 +132,7 @@ app.put('/:db/:item', function(req, res) {
   var data = req.body;
   itemUpdate(db, item, data, function() {
     if (this) res.json(this);
-    else if (!this) res.json({
-        Error: 'Item not found'
-      });
+    else if (!this) res.json({Error: 'Item not found'});
   });
 });
 
@@ -164,37 +151,27 @@ app.delete('/:db/:item?', function(req, res) {
   if (itemData.hasOwnProperty('clearcollection')) {
     if (itemData.clearcollection === 'true') {
       collectionClear(db, function() {
-        res.json({
-          Collection: 'Emptied'
-        });
+        res.json({Collection: 'Emptied'});
       });
     } else {
-      res.json({
-        Warning: "Set 'clearcollection':'true' if you want to clear the collection"
-      });
+      res.json({Warning: "Set 'clearcollection':'true' if you want to clear the collection"});
     }
   } else if (item) {
     itemRemove(db, item, function() {
       var data = {};
       data['Removed'] = item;
       if (this) res.json(data);
-      else res.json({
-          Error: 'Item does not exist'
-        });
+      else res.json({Error: 'Item does not exist'});
     });
   } else {
-    res.json({
-      Error: 'No item specified for deletion'
-    });
+    res.json({Error: 'No item specified for deletion'});
   }
 });
 
 /* Catchall */
 app.get('/*', function(req, res) {
   'use strict';
-  res.json({
-    Error: 'No database specified or invalid command'
-  });
+  res.json({Error: 'No database specified or invalid command'});
 });
 
 /* --- Helper functions --- */
@@ -216,9 +193,7 @@ function collectionGet(db, cb) {
   var collection = Datastore.get(db);
   var output = {};
   output[db] = {};
-  collection.find({}, {
-    stream: true
-  })
+  collection.find({}, {stream: true})
     .each(function(doc) {
       output[db][doc._id] = doc;
     })
@@ -235,9 +210,7 @@ function collectionFind(db, query, cb) {
   var collection = Datastore.get(db);
   var output = {};
   output[db] = {};
-  collection.find(query, {
-    stream: true
-  })
+  collection.find(query, {stream: true})
     .each(function(doc) {
       output[db][doc._id] = doc;
     })
@@ -268,9 +241,7 @@ function itemAdd(db, data, cb) {
     if (err && err.code === 11000) {
       if (cb) cb.call(false);
     } else {
-      io.sockets.in(db).emit('added', {
-        added: data
-      });
+      io.sockets.in(db).emit('added', {added: data});
       if (cb) cb.call(doc);
     }
   });
@@ -280,9 +251,7 @@ function itemAdd(db, data, cb) {
 function itemGet(db, item, cb) {
   'use strict';
   var collection = Datastore.get(db);
-  collection.find({
-    _id: item
-  }, function(err, doc) {
+  collection.find({_id: item}, function(err, doc) {
     if (cb) cb.call(doc);
   });
 }
@@ -293,14 +262,10 @@ function itemUpdate(db, item, data, cb) {
   var collection = Datastore.get(db);
   var update = {};
   update['$set'] = data;
-  collection.findAndModify({
-    _id: item
-  }, update, function(err, doc) {
+  collection.findAndModify({_id: item}, update, function(err, doc) {
     if (err) console.error(err);
     if (doc) {
-      io.sockets.in(db).emit('updated', {
-        updated: item
-      });
+      io.sockets.in(db).emit('updated', {updated: item});
       if (cb) cb.call(doc);
     } else {
       if (cb) cb.call(false);
@@ -319,9 +284,7 @@ function itemRemove(db, item, cb) {
     if (doc === 0) {
       if (cb) cb.call(false);
     } else {
-      io.sockets.in(db).emit('removed', {
-        removed: item
-      });
+      io.sockets.in(db).emit('removed', {removed: item});
       if (cb) cb.call(true);
     }
   });
@@ -332,9 +295,7 @@ function itemRemove(db, item, cb) {
 io.sockets.on('connection', function(socket) {
   'use strict';
   //on connect send a welcome message
-  socket.emit('message', {
-    text: 'Connected...'
-  });
+  socket.emit('message', {text: 'Connected...'});
 
   //on subscription request joins specified room
   //later messages are broadcasted on the rooms
@@ -374,9 +335,7 @@ io.sockets.on('connection', function(socket) {
     var item = data.item;
     //var key = Object.keys(data.item)[0];
     itemAdd(channel, item, function() {
-      if (!this) io.sockets.in(channel).emit('added', {
-          exists: 'Exists'
-        });
+      if (!this) io.sockets.in(channel).emit('added', {exists: 'Exists'});
     });
   });
 
@@ -385,9 +344,7 @@ io.sockets.on('connection', function(socket) {
     var item = data.item[Object.keys(data.item)[0]];
     var key = Object.keys(data.item)[0];
     itemUpdate(channel, key, item, function() {
-      if (!this) io.sockets.in(channel).emit('updated', {
-          missing: 'Missing'
-        });
+      if (!this) io.sockets.in(channel).emit('updated', {missing: 'Missing'});
     });
   });
 
