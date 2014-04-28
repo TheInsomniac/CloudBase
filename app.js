@@ -42,6 +42,24 @@ app.use(express.static(__dirname + '/clientExample', {maxAge: 6000000}));
 /* curl -X GET -H "Content-Type: application/json"  http://localhost:3000/example/test/data0/data1 */
 app.get(/^\/((?:[^\/]+\/?)+)\/?/, function (req, res, next) {
   'use strict';
+
+  // Called if item in query not found
+  function notFound(item, key, root) {
+    var ret = {};
+    if (item && !key) {
+      ret['Error'] = 'Item ' + item + ' does not exist';
+    } else if (!item && key) {
+      ret['Error'] = 'Key ' + key + ' does not exist';
+    } else if (item && key && !root) {
+      ret['Error'] = 'Key ' + key + ' of Item ' + item + ' does not exist';
+    } else if (item && key && root) {
+      ret['Error'] = 'Key ' + key + ' of Item ' + item + ' does not exist in ' + root;
+    } else {
+      ret['Error'] = 'Item does not exist';
+    }
+    return ret;
+  }
+
   var parm = req.params[0];
   if (parm.lastIndexOf('/') === (parm.length -1)) {
     parm = parm.slice(0, -1);
@@ -59,16 +77,42 @@ app.get(/^\/((?:[^\/]+\/?)+)\/?/, function (req, res, next) {
       }
     }
     itemGet(db, item, function() {
-      if (this.length && !key) res.json(this[0]);
-      else if (this.length && key && !keys) res.json(this[0][key]);
-      else if (this.length && key && keys) {
-        var ret = this[0][key];
-        for (var i = 0; i < keys.length; i++) {
-          ret = ret[keys[i]];
+      var ret;
+      if (this.length && !key) {
+        res.json(this[0]);
+      } else if (this.length && key && !keys) {
+        ret = this[0][key];
+        if (ret === undefined) {
+          res.json(notFound(item, key));
+        } else {
+          res.json(ret);
         }
-        res.json(ret);
+      } else if (this.length && key && keys) {
+        var curr, last, parent;
+        ret = this[0][key];
+        if (ret === undefined) {
+          res.json(notFound(item, key));
+        } else {
+          for (var i = 0; i < keys.length; i++) {
+            curr = keys[i];
+            ret = ret[keys[i]];
+            if (ret === undefined) {
+              break;
+            }
+            last = keys[i];
+            parent = keys[i-1];
+          }
+          if (ret === undefined) {
+            last = last || key;
+            parent = parent || key;
+            res.json(notFound(last, curr, parent));
+          } else {
+            res.json(ret);
+          }
+        }
+      } else {
+        res.json(notFound(item));
       }
-      else res.json({Error: 'Item does not exist'});
     });
   }
 });
@@ -77,7 +121,6 @@ app.get(/^\/((?:[^\/]+\/?)+)\/?/, function (req, res, next) {
 /* curl -X GET -H "Content-Type: application/json"  http://localhost:3000/example */
 app.get('/:db', function(req, res, next) {
   'use strict';
-  console.log('called');
   if (Object.keys(req.body).length) {
     next();
   } else {
